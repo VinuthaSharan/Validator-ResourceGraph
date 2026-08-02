@@ -1,0 +1,17 @@
+# Azure Functions
+local.settings.json
+.python_packages/
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+output/*.json
+.azure/
+
+# Secrets
+.env
+*.pem
+
+# IDE
+
+.idea/

@@ -1,0 +1,15 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AZURE_SUBSCRIPTION_ID": "<your-subscription-id>",
+    "RULES_SOURCE": "json",
+    "RULES_JSON_PATH": "../../rules/compliance-rules.json",
+    "AUDIT_STORAGE": "jsonfile",
+    "AUDIT_JSON_PATH": "../../output/latest-scan.json",
+    "SQL_CONNECTION_STRING": "",
+    "LOGIC_APP_WEBHOOK_URL": "",
+    "COMPLIANCE_SCAN_SCHEDULE": "0 0 2 * * *"
+  }
+}

@@ -1,0 +1,6 @@
+Resources
+| where subscriptionId == '{subscriptionId}'
+| where type == 'microsoft.storage/storageaccounts'
+| project id, name, resourceGroup, location, subscriptionId,
+          supportsHttps = properties.supportsHttpsTrafficOnly,
+          minimumTls = properties.minimumTlsVersion

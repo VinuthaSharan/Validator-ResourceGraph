@@ -1,0 +1,20 @@
+{
+  "name": "compliance-scanner",
+  "version": "1.0.0",
+  "description": "Azure Resource Graph compliance scanner POC",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "func start",
+    "scan": "node scripts/runScan.js",
+    "test": "node --test tests/validator.test.js"
+  },
+  "dependencies": {
+    "@azure/arm-resourcegraph": "^4.2.0",
+    "@azure/functions": "^4.6.0",
+    "@azure/identity": "^4.5.0",
+    "mssql": "^11.0.1"
+  }
+}

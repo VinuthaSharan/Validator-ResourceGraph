@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "id": "storage-https-only",
+      "name": "Storage accounts must require HTTPS",
+      "description": "supportsHttpsTrafficOnly should be true",
+      "severity": "High",
+      "resourceType": "microsoft.storage/storageaccounts",
+      "kql": "Resources | where subscriptionId == '{subscriptionId}' | where type == 'microsoft.storage/storageaccounts' | project id, name, resourceGroup, subscriptionId, properties",
+      "checks": [
+        {
+          "path": "properties.supportsHttpsTrafficOnly",
+          "operator": "equals",
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "vm-tags-required",
+      "name": "Virtual machines should have Environment tag",
+      "description": "Tag Environment must be present",
+      "severity": "Medium",
+      "resourceType": "microsoft.compute/virtualmachines",
+      "kql": "Resources | where subscriptionId == '{subscriptionId}' | where type == 'microsoft.compute/virtualmachines' | project id, name, resourceGroup, subscriptionId, properties, tags",
+      "checks": [
+        {
+          "path": "tags.Environment",
+          "operator": "exists",
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "keyvault-soft-delete",
+      "name": "Key Vault soft delete enabled",
+      "description": "enableSoftDelete should be true where applicable",
+      "severity": "High",
+      "resourceType": "microsoft.keyvault/vaults",
+      "kql": "Resources | where subscriptionId == '{subscriptionId}' | where type == 'microsoft.keyvault/vaults' | project id, name, resourceGroup, subscriptionId, properties",
+      "checks": [
+        {
+          "path": "properties.enableSoftDelete",
+          "operator": "equals",
+          "expected": true
+        }
+      ]
+    }
+  ]
+}

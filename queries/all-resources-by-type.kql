@@ -1,0 +1,5 @@
+// List resource counts by type in a subscription (dashboard / inventory)
+Resources
+| where subscriptionId == '{subscriptionId}'
+| summarize Count=count() by type
+| order by Count desc
