@@ -56,39 +56,41 @@ async function saveComplianceHistory(history) {
         .input("resourceId", sql.NVarChar, history.resourceId)
         .input("resourceName", sql.NVarChar, history.resourceName)
         .input("resourceType", sql.NVarChar, history.resourceType)
-        .input("ruleId", sql.NVarChar, history.ruleId)
         .input("propertyName", sql.NVarChar, history.propertyName)
         .input("previous", sql.NVarChar, history.previous == null ? null : String(history.previous))
         .input("current", sql.NVarChar, history.current == null ? null : String(history.current))
         .input("expected", sql.NVarChar, history.expected == null ? null : String(history.expected))
         .input("status", sql.NVarChar, history.status)
-        .input("eventTime", sql.DateTime, history.eventTime)
+        .input("operationName", sql.NVarChar, history.operationName ?? "SCAN")
+        .input("eventTime", sql.DateTime2, history.eventTime)
         .query(`
 INSERT INTO ComplianceHistory
 (
     ResourceId,
     ResourceName,
     ResourceType,
-    RuleId,
     PropertyName,
     PreviousValue,
     CurrentValue,
     ExpectedValue,
     ComplianceStatus,
-    EventTime
+    OperationName,
+    EventTime,
+    ProcessedTime
 )
 VALUES
 (
     @resourceId,
     @resourceName,
     @resourceType,
-    @ruleId,
     @propertyName,
     @previous,
     @current,
     @expected,
     @status,
-    @eventTime
+    @operationName,
+    @eventTime,
+    NULL
 )
 `);
 }

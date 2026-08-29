@@ -17,6 +17,19 @@
       ]
     },
     {
+        "id": "storage-tags-required",
+        "name": "Storage accounts should have Environment tag",
+        "resourceType": "microsoft.storage/storageaccounts",
+        "kql": "Resources | where subscriptionId == '{subscriptionId}' | where type == 'microsoft.storage/storageaccounts' | project id, name, resourceGroup, subscriptionId, properties, tags",
+        "checks": [
+          {
+            "path": "tags.Environment",
+            "operator": "exists",
+            "expected": true
+          }
+        ]
+      },
+    {
       "id": "vm-tags-required",
       "name": "Virtual machines should have Environment tag",
       "description": "Tag Environment must be present",

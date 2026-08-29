@@ -1,4 +1,28 @@
 /**
+ * @param {string} scanRunId
+ * @param {string} subscriptionId
+ * @param {Array<{ ruleId: string, resourceId: string, resourceName?: string|null, propertyName?: string, previous?: string|boolean|null, current?: string|boolean|null, status?: string }>} changes
+ * @returns {{ eventType: string, scanRunId: string, subscriptionId: string, driftCount: number, changes: Array<object> }}
+ */
+function buildDriftAlertPayload(scanRunId, subscriptionId, changes) {
+  return {
+    eventType: "compliance_drift",
+    scanRunId,
+    subscriptionId,
+    driftCount: changes.length,
+    changes: changes.map((change) => ({
+      ruleId: change.ruleId,
+      resourceId: change.resourceId,
+      resourceName: change.resourceName ?? null,
+      propertyName: change.propertyName ?? null,
+      previous: change.previous ?? null,
+      current: change.current ?? null,
+      status: change.status ?? "UNKNOWN",
+    })),
+  };
+}
+
+/**
  * @param {string} webhookUrl
  * @param {object} payload
  */
@@ -20,4 +44,4 @@ async function sendComplianceAlerts(webhookUrl, payload) {
   }
 }
 
-module.exports = { sendComplianceAlerts };
+module.exports = { buildDriftAlertPayload, sendComplianceAlerts };

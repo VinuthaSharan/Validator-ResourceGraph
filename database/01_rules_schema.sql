@@ -2,7 +2,7 @@
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ComplianceRules')
 BEGIN
     CREATE TABLE dbo.ComplianceRules (
-        RuleId          NVARCHAR(64)  NOT NULL PRIMARY KEY,
+        Id          NVARCHAR(64)  NOT NULL PRIMARY KEY,
         Name            NVARCHAR(256) NOT NULL,
         Description     NVARCHAR(1024) NULL,
         Severity        NVARCHAR(32)  NOT NULL DEFAULT 'Medium',

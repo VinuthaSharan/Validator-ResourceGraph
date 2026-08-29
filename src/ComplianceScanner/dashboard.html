@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Azure Compliance Monitor</title>
+
+    <link rel="stylesheet" href="/api/dashboard.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">◆</div>
+
+            <div>
+                <div class="brand-title">AZURE RESOURCE</div>
+                <div class="brand-title">GOVERNANCE</div>
+            </div>
+        </div>
+
+        <nav class="navigation">
+
+            <a class="nav-item active" href="#">
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a class="nav-item" href="#report">
+                <span class="nav-icon">▤</span>
+                Compliance Report
+            </a>
+
+            <a class="nav-item" href="#scan">
+                <span class="nav-icon">▶</span>
+                Run Scan
+            </a>
+
+            <a class="nav-item" href="#resources">
+                <span class="nav-icon">▥</span>
+                Resources
+            </a>
+
+            <a class="nav-item" href="#rules">
+                <span class="nav-icon">✓</span>
+                Rules
+            </a>
+
+            <a class="nav-item" href="#settings">
+                <span class="nav-icon">⚙</span>
+                Settings
+            </a>
+
+            <a class="nav-item" href="#about">
+                <span class="nav-icon">ⓘ</span>
+                About
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="system-status">
+
+                <div class="status-dot"></div>
+
+                <div>
+                    <div class="status-title">
+                        System Status
+                    </div>
+
+                    <div class="status-description">
+                        All systems operational
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="updated">
+                Last updated:
+                <br>
+                <span id="lastUpdatedSidebar">—</span>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main">
+
+        <!-- HEADER -->
+
+        <header class="header">
+
+            <div>
+
+                <div class="page-title">
+                    Compliance Monitor
+                </div>
+
+                <div class="page-subtitle">
+                    Infrastructure compliance and configuration drift overview
+                </div>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button
+                    id="refreshBtn"
+                    class="btn btn-secondary">
+
+                    ↻ Refresh
+
+                </button>
+
+
+                <button
+                    id="scanBtn"
+                    class="btn btn-primary">
+
+                    ▶ Run Scan
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= STATUS MESSAGE ================= -->
+
+        <div
+            id="statusMessage"
+            class="status-message hidden">
+        </div>
+
+
+        <!-- ================= KPI CARDS ================= -->
+
+        <section class="kpi-grid">
+
+
+            <!-- Resources -->
+
+            <div class="kpi-card">
+
+                <div class="kpi-icon blue">
+                    ▤
+                </div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        Resources Scanned
+                    </div>
+
+                    <div
+                        id="totalResources"
+                        class="kpi-value">
+                        —
+                    </div>
+
+                    <div
+                        id="latestScanTime"
+                        class="kpi-description">
+                        Latest scan
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Compliant -->
+
+            <div class="kpi-card success-card">
+
+                <div class="kpi-icon green">
+                    ✓
+                </div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        Compliant
+                    </div>
+
+                    <div
+                        id="compliantResources"
+                        class="kpi-value green-text">
+                        —
+                    </div>
+
+                    <div
+                        id="compliantPercentage"
+                        class="kpi-description">
+                        Within policy
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Non Compliant -->
+
+            <div class="kpi-card danger-card">
+
+                <div class="kpi-icon red">
+                    !
+                </div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        Non-Compliant
+                    </div>
+
+                    <div
+                        id="nonCompliantResources"
+                        class="kpi-value red-text">
+                        —
+                    </div>
+
+                    <div
+                        id="nonCompliantPercentage"
+                        class="kpi-description">
+                        Action required
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Action Required -->
+
+            <div class="kpi-card warning-card">
+
+                <div class="kpi-icon orange">
+                    !
+                </div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        Action Required
+                    </div>
+
+                    <div
+                        id="actionRequired"
+                        class="kpi-value orange-text">
+                        —
+                    </div>
+
+                    <div class="kpi-description">
+                        Requires attention
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Compliance Rate -->
+
+            <div class="kpi-card compliance-card">
+
+                <div class="compliance-circle">
+
+                    <svg viewBox="0 0 100 100">
+
+                        <circle
+                            class="circle-bg"
+                            cx="50"
+                            cy="50"
+                            r="40">
+                        </circle>
+
+                        <circle
+                            id="complianceCircle"
+                            class="circle-progress"
+                            cx="50"
+                            cy="50"
+                            r="40">
+                        </circle>
+
+                    </svg>
+
+                    <div
+                        id="complianceRate"
+                        class="circle-text">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <div class="kpi-label">
+                        Compliance Rate
+                    </div>
+
+                    <div class="kpi-description">
+                        Overall
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= CHARTS ================= -->
+
+        <section class="charts-grid">
+
+
+            <!-- Trend -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Compliance Status Trend
+                        </h2>
+
+                        <p>
+                            Latest compliance scan history
+                        </p>
+
+                    </div>
+
+                    <div class="legend">
+
+                        <span>
+                            <i class="legend-dot green-dot"></i>
+                            Compliant
+                        </span>
+
+                        <span>
+                            <i class="legend-dot red-dot"></i>
+                            Non-Compliant
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas
+                        id="trendChart">
+                    </canvas>
+
+                </div>
+
+            </div>
+
+
+            <!-- Resource Types -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Resources by Type
+                        </h2>
+
+                        <p>
+                            Distribution of scanned resources
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="resource-chart">
+
+                    <div class="donut-container">
+
+                        <canvas
+                            id="resourceChart">
+                        </canvas>
+
+                        <div class="donut-center">
+
+                            <strong
+                                id="resourceChartTotal">
+                                —
+                            </strong>
+
+                            <span>
+                                Total
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="resourceLegend"
+                        class="resource-legend">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= COMPLIANCE TABLE ================= -->
+
+        <section
+            id="report"
+            class="panel results-panel">
+
+
+            <div class="panel-header results-header">
+
+                <div>
+
+                    <h2>
+                        Latest Compliance Results
+                    </h2>
+
+                    <p id="resultsSummary">
+                        Loading compliance results...
+                    </p>
+
+                </div>
+
+
+                <div class="table-actions">
+
+                    <div class="search-box">
+
+                        <span>⌕</span>
+
+                        <input
+                            id="searchInput"
+                            type="text"
+                            placeholder="Search resources...">
+
+                    </div>
+
+
+                    <select id="typeFilter">
+
+                        <option value="all">
+                            All Types
+                        </option>
+
+                    </select>
+
+
+                    <select id="statusFilter">
+
+                        <option value="all">
+                            All Status
+                        </option>
+
+                        <option value="compliant">
+                            Compliant
+                        </option>
+
+                        <option value="noncompliant">
+                            Non-Compliant
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        id="exportBtn"
+                        class="btn btn-outline">
+
+                        ↓ Export
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Resource Name
+                        </th>
+
+                        <th>
+                            Resource Type
+                        </th>
+
+                        <th>
+                            Resource Group
+                        </th>
+
+                        <th>
+                            Rule / Property
+                        </th>
+
+                        <th>
+                            Current Value
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Message
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody id="resultsBody">
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="loading">
+
+                            Loading compliance results...
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- Pagination -->
+
+            <div class="table-footer">
+
+                <div id="paginationInfo">
+                    Showing 0 results
+                </div>
+
+
+                <div class="pagination">
+
+                    <button id="prevPage">
+                        ‹
+                    </button>
+
+                    <span id="currentPage">
+                        1
+                    </span>
+
+                    <button id="nextPage">
+                        ›
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= RAW RESPONSE ================= -->
+
+        <details class="raw-panel">
+
+            <summary>
+                Developer / API Response
+            </summary>
+
+            <pre id="rawResponse">
+No API response yet.
+            </pre>
+
+        </details>
+
+
+        <!-- ================= FOOTER ================= -->
+
+        <footer>
+
+            ◆ Azure Compliance Monitor
+
+            <span>•</span>
+
+            Local Development
+
+            <span>•</span>
+
+            Version 1.0.0
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="/api/dashboard.js"></script>
+
+</body>
+</html>

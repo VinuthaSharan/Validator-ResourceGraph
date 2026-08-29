@@ -5,7 +5,7 @@ const { loadRules } = require("./rulesLoader");
 const { validateResource } = require("./validator");
 const sqlService = require("./sqlService");
 const { createAuditStore } = require("./auditStore");
-const { sendComplianceAlerts } = require("./alerts");
+const { buildDriftAlertPayload, sendComplianceAlerts } = require("./alerts");
 
 /**
  * @typedef {object} ComplianceResultRow
@@ -40,27 +40,41 @@ function utcNowIso() {
  * @returns {Promise<ScanSummary>}
  */
 async function runComplianceScan(context) {
+  context?.log("=== Compliance Scan Starting ===");
+
   const settings = loadSettings();
+  context?.log("Starting compliance scan");
+  context?.log(`Subscription configured: ${Boolean(settings.subscriptionId)}`);
+  context?.log(`Rules source: ${settings.rulesSource}`);
+  context?.log(`Rules JSON path: ${settings.rulesJsonPath}`);
+  context?.log(`SQL configured: ${Boolean(settings.sqlConnectionString)}`);
+  context?.log(`Audit storage configured: ${Boolean(settings.auditStorage)}`);
   if (!settings.subscriptionId) {
     throw new Error("AZURE_SUBSCRIPTION_ID is required");
   }
-
+  context?.log("Loading compliance rules...");
   const rules = await loadRules(
     settings.rulesSource,
     settings.rulesJsonPath,
     settings.sqlConnectionString
   );
+  context?.log(`Rules loaded: ${rules.length}`);
+
+  context?.log("Creating Resource Graph client...");
   const rg = new ResourceGraphService();
+  context?.log("Resource Graph service initialized");
   const audit = createAuditStore(
     settings.auditStorage,
     settings.auditJsonPath,
     settings.sqlConnectionString
   );
-
+  context?.log("Audit store initialized");
   const scanRunId = crypto.randomUUID();
   const started = utcNowIso();
   /** @type {ComplianceResultRow[]} */
   const results = [];
+  /** @type {Array<{ ruleId: string, resourceId: string, resourceName?: string|null, propertyName?: string, previous?: string|boolean|null, current?: string|boolean|null, status?: string }>} */
+  const driftChanges = [];
   const resourceIdsSeen = new Set();
 
   for (const rule of rules) {
@@ -76,24 +90,35 @@ async function runComplianceScan(context) {
         if (rid) {
           resourceIdsSeen.add(rid);
         }
+        const propertyName = rule.checks[0]?.path ?? rule.id;
         const [compliant, messages] = validateResource(row, rule.checks);
         const currentValue = messages.join("; ");
 
-        const previous = await sqlService.getLatestCompliance(rid, rule.id);
+        const previous = await sqlService.getLatestCompliance(rid, propertyName);
         const previousValue = previous ? previous.CurrentValue : null;
         const changed = previousValue !== currentValue;
 
         if (changed) {
+          driftChanges.push({
+            ruleId: rule.id,
+            resourceId: rid,
+            resourceName: row.name != null ? String(row.name) : null,
+            propertyName,
+            previous: previousValue,
+            current: currentValue,
+            status: compliant ? "PASS" : "FAIL",
+          });
+
           await sqlService.saveComplianceHistory({
             resourceId: rid,
             resourceName: row.name != null ? String(row.name) : null,
             resourceType: row.type != null ? String(row.type) : null,
-            ruleId: rule.id,
-            propertyName: rule.checks[0]?.path ?? rule.id,
+            propertyName,
             previous: previousValue,
             current: currentValue,
             expected: rule.checks[0]?.expected,
             status: compliant ? "PASS" : "FAIL",
+            operationName: "SCAN",
             eventTime: new Date(),
           });
         }
@@ -102,7 +127,7 @@ async function runComplianceScan(context) {
           resourceId: rid,
           resourceName: row.name != null ? String(row.name) : null,
           resourceType: row.type != null ? String(row.type) : null,
-          propertyName: rule.id,
+          propertyName,
           current: currentValue,
           status: compliant ? "PASS" : "FAIL",
         });
@@ -148,32 +173,11 @@ async function runComplianceScan(context) {
 
   await audit.save(summary);
 
-  if (settings.logicAppWebhookUrl) {
-    await sendComplianceAlerts(settings.logicAppWebhookUrl, {
-      ResourceName: "StorageDemo",
-      Rule: "HTTPS Only",
-      Current: false,
-      Expected: true,
-      Status: "FAIL",
-    });
-  }
-
-  if (failCount > 0) {
-    await sendComplianceAlerts(settings.logicAppWebhookUrl, {
-      scanRunId,
-      subscriptionId: settings.subscriptionId,
-      failCount,
-      passCount,
-      failures: results
-        .filter((r) => !r.isCompliant)
-        .slice(0, 50)
-        .map((r) => ({
-          ruleId: r.ruleId,
-          resourceId: r.resourceId,
-          resourceName: r.resourceName,
-          message: r.message,
-        })),
-    });
+  if (settings.logicAppWebhookUrl && driftChanges.length > 0) {
+    await sendComplianceAlerts(
+      settings.logicAppWebhookUrl,
+      buildDriftAlertPayload(scanRunId, settings.subscriptionId, driftChanges)
+    );
   }
 
   context?.log(

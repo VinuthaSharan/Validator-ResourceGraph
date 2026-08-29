@@ -2,6 +2,7 @@ const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 const { validateResource } = require("../src/compliance/validator");
 const sqlService = require("../src/compliance/sqlService");
+const { buildDriftAlertPayload } = require("../src/compliance/alerts");
 
 process.env.SQL_CONNECTION_STRING = "";
 
@@ -21,6 +22,29 @@ describe("validateResource", () => {
     );
     assert.equal(ok, false);
     assert.ok(msgs.some((m) => m.includes("missing")));
+  });
+});
+
+describe("buildDriftAlertPayload", () => {
+  it("returns a drift event payload for actual state changes", () => {
+    const payload = buildDriftAlertPayload("scan-run-1", "sub-1", [
+      {
+        ruleId: "rule-1",
+        resourceId: "resource-1",
+        resourceName: "acct",
+        propertyName: "properties.supportsHttpsTrafficOnly",
+        previous: true,
+        current: false,
+        status: "FAIL",
+      },
+    ]);
+
+    assert.equal(payload.eventType, "compliance_drift");
+    assert.equal(payload.scanRunId, "scan-run-1");
+    assert.equal(payload.subscriptionId, "sub-1");
+    assert.equal(payload.driftCount, 1);
+    assert.equal(payload.changes[0].resourceId, "resource-1");
+    assert.equal(payload.changes[0].status, "FAIL");
   });
 });
 
