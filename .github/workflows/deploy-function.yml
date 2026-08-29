@@ -23,7 +23,7 @@ permissions:
 jobs:
 
   # ==========================================
-  # CI
+  # CI - Build and Test
   # ==========================================
 
   test:
@@ -49,7 +49,7 @@ jobs:
 
 
   # ==========================================
-  # CD
+  # CD - Deploy to Azure
   # ==========================================
 
   deploy:
@@ -58,6 +58,7 @@ jobs:
 
     needs: test
 
+    # Don't deploy Pull Requests
     if: github.event_name != 'pull_request'
 
     steps:
